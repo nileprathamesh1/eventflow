@@ -1,0 +1,123 @@
+{
+  "title": "EventFlow Dashboard",
+  "uid": "eventflow-main",
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Events Processed (Total)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "eventflow_events_processed_total",
+          "legendFormat": "Processed"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Events Failed (Total)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "eventflow_events_failed_total",
+          "legendFormat": "Failed"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Event Throughput (events/sec)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(eventflow_events_processed_total[1m])",
+          "legendFormat": "Processed/sec"
+        },
+        {
+          "expr": "rate(eventflow_events_failed_total[1m])",
+          "legendFormat": "Failed/sec"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "API p95 Latency (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{uri='/api/events'}[1m])) * 1000",
+          "legendFormat": "p95 latency (ms)"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{uri='/api/events'}[1m])) * 1000",
+          "legendFormat": "p99 latency (ms)"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "API Request Rate (req/sec)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{uri='/api/events'}[1m])",
+          "legendFormat": "Requests/sec"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "JVM Heap Used (MB)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area='heap'} / 1024 / 1024",
+          "legendFormat": "Heap Used (MB)"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "HTTP Error Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{status=~'4..|5..', uri='/api/events'}[1m])",
+          "legendFormat": "{{status}} errors/sec"
+        }
+      ]
+    }
+  ],
+  "time": { "from": "now-15m", "to": "now" },
+  "schemaVersion": 36
+}

@@ -1,0 +1,66 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/eventflow
+    username: eventflow
+    password: eventflow123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable.idempotence: true
+        acks: all
+        retries: 3
+        max.in.flight.requests.per.connection: 1
+    consumer:
+      group-id: eventflow-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.eventflow.dto"
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    distribution:
+      # Enable histogram buckets for p95/p99 latency calculations in Prometheus
+      percentiles-histogram:
+        http.server.requests: true
+        eventflow.publish.latency: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+        eventflow.publish.latency: 0.5, 0.95, 0.99
+
+server:
+  port: 8080
+
+eventflow:
+  kafka:
+    topic: events
+    dlt: events.DLT
+  rate-limit:
+    max-requests: 100      # raised for load testing — 100 events per source per minute
+    window-seconds: 60
