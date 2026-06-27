@@ -26,13 +26,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/*
- * Full integration test — spins up real Kafka, PostgreSQL, and Redis via Testcontainers.
- * Tests the entire flow: REST API -> Kafka -> Consumer -> PostgreSQL.
- *
- * Testcontainers pulls Docker images and manages container lifecycle automatically.
- * No mocks here — this tests the actual wiring.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
@@ -79,7 +72,6 @@ class EventFlowIntegrationTest {
                 .payload("test-payload")
                 .build();
 
-        // Step 1: POST the event — should return 202 Accepted with an eventId
         String response = mockMvc.perform(post("/api/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -92,8 +84,6 @@ class EventFlowIntegrationTest {
 
         String eventId = objectMapper.readTree(response).get("eventId").asText();
 
-        // Step 2: Wait for the Kafka consumer to process and persist the event
-        // Awaitility polls until the condition is met or times out
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
             assertThat(eventRepository.findById(eventId)).isPresent();
             assertThat(eventRepository.findById(eventId).get().getSource()).isEqualTo("auth-service");
@@ -108,7 +98,6 @@ class EventFlowIntegrationTest {
                 .payload("payload")
                 .build();
 
-        // Send 10 events (the limit)
         for (int i = 0; i < 10; i++) {
             mockMvc.perform(post("/api/events")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +105,6 @@ class EventFlowIntegrationTest {
                     .andExpect(status().isAccepted());
         }
 
-        // 11th event should be rate limited
         mockMvc.perform(post("/api/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

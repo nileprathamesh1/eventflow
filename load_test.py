@@ -27,7 +27,7 @@ BASE_URL = "http://localhost:8080/api/events"
 def send_event(i: int) -> dict:
     payload = json.dumps({
         "type": "load.test.event",
-        "source": f"load-tester-{i % 100}",   # 10 different sources to spread the load
+        "source": f"load-tester-{i % 10}",   # 10 different sources to spread the load
         "payload": {"index": i, "data": "benchmark-payload"}
     }).encode("utf-8")
 

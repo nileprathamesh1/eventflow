@@ -30,7 +30,6 @@ public class EventService {
         String eventId = UUID.randomUUID().toString();
 
         if (redisService.isDuplicate(eventId)) {
-            // UUID collision is astronomically unlikely, but good practice to handle
             log.warn("Duplicate event ID generated: {}", eventId);
             throw new IllegalStateException("Duplicate event ID, please retry");
         }
@@ -43,8 +42,7 @@ public class EventService {
                 .timestamp(Instant.now())
                 .build();
 
-        // Keying by source ensures events from the same source land on the same partition,
-        // preserving ordering per source
+        // keyed by source to preserve per-source ordering across partitions
         kafkaTemplate.send(topic, request.getSource(), message);
         log.info("Published event {} of type {} from {}", eventId, request.getType(), request.getSource());
 

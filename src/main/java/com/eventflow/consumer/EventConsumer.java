@@ -28,7 +28,6 @@ public class EventConsumer {
                          MeterRegistry meterRegistry) {
         this.eventRepository = eventRepository;
         this.objectMapper = objectMapper;
-        // Metrics counters — visible at /actuator/prometheus
         this.processedCounter = Counter.builder("eventflow.events.processed")
                 .description("Total events successfully processed")
                 .register(meterRegistry);
@@ -46,7 +45,6 @@ public class EventConsumer {
             payloadJson = objectMapper.writeValueAsString(message.getPayload());
         } catch (Exception e) {
             failedCounter.increment();
-            // Throwing here triggers the DefaultErrorHandler — it will retry twice then send to DLT
             throw new RuntimeException("Failed to serialize payload for event: " + message.getEventId(), e);
         }
 
@@ -65,14 +63,9 @@ public class EventConsumer {
         log.info("Persisted event {}", message.getEventId());
     }
 
-    /*
-     * DLT listener — events land here after exhausting retries.
-     * For now we just log them, but in production you'd alert on this
-     * or store them separately for manual review.
-     */
     @KafkaListener(topics = "${eventflow.kafka.dlt}", groupId = "${spring.kafka.consumer.group-id}-dlt")
     public void consumeFromDlt(EventMessage message) {
-        log.error("Event {} landed in DLT — manual intervention required. Source: {}, Type: {}",
+        log.error("Event {} landed in DLT. Source: {}, Type: {}",
                 message.getEventId(), message.getSource(), message.getType());
         failedCounter.increment();
     }

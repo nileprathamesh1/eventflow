@@ -42,7 +42,6 @@ class EventServiceTest {
                 .build();
 
         String eventId = eventService.publish(request);
-
         assertThat(eventId).isNotBlank();
     }
 
@@ -60,7 +59,6 @@ class EventServiceTest {
 
         eventService.publish(request);
 
-        // Verify the message was keyed by source — ensures ordering per source in Kafka
         ArgumentCaptor<EventMessage> messageCaptor = ArgumentCaptor.forClass(EventMessage.class);
         verify(kafkaTemplate).send(eq("events"), eq("order-service"), messageCaptor.capture());
 
@@ -83,7 +81,6 @@ class EventServiceTest {
                 .isInstanceOf(EventService.RateLimitExceededException.class)
                 .hasMessageContaining("throttled-service");
 
-        // Kafka should not be called if rate limited
         verifyNoInteractions(kafkaTemplate);
     }
 

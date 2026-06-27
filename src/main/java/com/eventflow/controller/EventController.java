@@ -22,7 +22,6 @@ public class EventController {
     private final EventService eventService;
     private final EventRepository eventRepository;
 
-    // @Timed generates p50/p95/p99 latency histograms for this endpoint in Prometheus
     @Timed(value = "eventflow.publish.latency", description = "Latency of event publish endpoint", percentiles = {0.5, 0.95, 0.99})
     @PostMapping
     public ResponseEntity<Map<String, String>> publish(@Valid @RequestBody EventRequest request) {
